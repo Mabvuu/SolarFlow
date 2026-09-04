@@ -12,7 +12,7 @@ import {
 
 
 const API_URL =
-  "https://solarflow-backend-uvqv.onrender.com";
+  "https://solarflow-backend-uvgv.onrender.com";
 
 
 export default function CustomerWarrantiesPage() {

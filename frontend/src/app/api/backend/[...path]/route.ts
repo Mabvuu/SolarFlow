@@ -13,102 +13,143 @@ async function proxyRequest(
   request: Request,
   context: RouteContext
 ) {
-  const { path } =
-    await context.params;
+  try {
+    const { path } =
+      await context.params;
 
-  const incomingUrl =
-    new URL(request.url);
+    const incomingUrl =
+      new URL(request.url);
 
-  const targetUrl =
-    new URL(
-      `${BACKEND_URL}/${path.join("/")}`
-    );
+    const requestedPath =
+      path.join("/");
 
-  targetUrl.search =
-    incomingUrl.search;
+    const hasTrailingSlash =
+      incomingUrl.pathname.endsWith(
+        "/"
+      );
 
+    const backendPath =
+      hasTrailingSlash
+        ? `${requestedPath}/`
+        : requestedPath;
 
-  const headers =
-    new Headers();
+    const targetUrl =
+      new URL(
+        `${BACKEND_URL}/${backendPath}`
+      );
 
-  const contentType =
-    request.headers.get(
-      "content-type"
-    );
-
-  const authorization =
-    request.headers.get(
-      "authorization"
-    );
-
-
-  if (contentType) {
-    headers.set(
-      "content-type",
-      contentType
-    );
-  }
+    targetUrl.search =
+      incomingUrl.search;
 
 
-  if (authorization) {
-    headers.set(
-      "authorization",
-      authorization
-    );
-  }
+    const headers =
+      new Headers();
+
+    const contentType =
+      request.headers.get(
+        "content-type"
+      );
+
+    const authorization =
+      request.headers.get(
+        "authorization"
+      );
 
 
-  let body:
-    | ArrayBuffer
-    | undefined;
+    if (contentType) {
+      headers.set(
+        "content-type",
+        contentType
+      );
+    }
 
 
-  if (
-    request.method !== "GET" &&
-    request.method !== "HEAD"
-  ) {
-    body =
-      await request.arrayBuffer();
-  }
+    if (authorization) {
+      headers.set(
+        "authorization",
+        authorization
+      );
+    }
 
 
-  const response =
-    await fetch(
-      targetUrl,
+    let body:
+      | ArrayBuffer
+      | undefined;
+
+
+    if (
+      request.method !== "GET" &&
+      request.method !== "HEAD"
+    ) {
+      body =
+        await request.arrayBuffer();
+    }
+
+
+    const response =
+      await fetch(
+        targetUrl,
+        {
+          method:
+            request.method,
+
+          headers,
+
+          body,
+
+          cache:
+            "no-store",
+
+          redirect:
+            "follow",
+        }
+      );
+
+
+    const responseHeaders =
+      new Headers();
+
+    const responseContentType =
+      response.headers.get(
+        "content-type"
+      );
+
+
+    if (responseContentType) {
+      responseHeaders.set(
+        "content-type",
+        responseContentType
+      );
+    }
+
+
+    return new Response(
+      response.body,
       {
-        method: request.method,
-        headers,
-        body,
-        cache: "no-store",
+        status:
+          response.status,
+
+        headers:
+          responseHeaders,
       }
     );
 
-
-  const responseHeaders =
-    new Headers();
-
-  const responseContentType =
-    response.headers.get(
-      "content-type"
+  } catch (error) {
+    console.error(
+      "SolarFlow backend proxy error:",
+      error
     );
 
-
-  if (responseContentType) {
-    responseHeaders.set(
-      "content-type",
-      responseContentType
+    return Response.json(
+      {
+        detail:
+          "Could not connect to SolarFlow backend.",
+      },
+      {
+        status: 502,
+      }
     );
   }
-
-
-  return new Response(
-    response.body,
-    {
-      status: response.status,
-      headers:
-        responseHeaders,
-    }
-  );
 }
 
 

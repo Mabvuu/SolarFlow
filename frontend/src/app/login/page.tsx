@@ -19,10 +19,6 @@ import {
   Zap,
 } from "lucide-react";
 
-import {
-  useRouter,
-} from "next/navigation";
-
 
 const API_URL =
   "/api/backend";
@@ -34,8 +30,6 @@ type LoginType =
 
 
 export default function LoginPage() {
-  const router = useRouter();
-
   const [
     loginType,
     setLoginType,
@@ -89,9 +83,13 @@ export default function LoginPage() {
 
 
   async function login(
-    event: FormEvent
+    event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
+
+    if (loading) {
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -100,21 +98,40 @@ export default function LoginPage() {
       if (
         loginType === "admin"
       ) {
+        const cleanEmail =
+          email
+            .trim()
+            .toLowerCase();
+
         if (
-          email !==
+          cleanEmail !==
             "admin@solarflow.co.zw" ||
-          password !== "demo123"
+          password !==
+            "demo123"
         ) {
           throw new Error(
             "Invalid admin email or password."
           );
         }
 
+
+        /*
+          ADMIN SESSION
+
+          Store the admin session first.
+          localStorage is synchronous,
+          so this exists before navigation.
+        */
         localStorage.setItem(
           "solarflow_demo_user",
           "true"
         );
 
+
+        /*
+          Remove customer session data so
+          the two workspaces cannot conflict.
+        */
         localStorage.removeItem(
           "solarflow_customer_token"
         );
@@ -127,12 +144,31 @@ export default function LoginPage() {
           "solarflow_admin_preview"
         );
 
-        router.push("/");
+
+        /*
+          IMPORTANT:
+
+          Do NOT use router.push("/").
+
+          "/" redirects again to /dashboard
+          and introduces another navigation
+          between login and the admin guard.
+
+          A full navigation to /dashboard
+          remounts ErpShell cleanly after the
+          localStorage session has been saved.
+        */
+        window.location.replace(
+          "/dashboard"
+        );
 
         return;
       }
 
 
+      /*
+        CUSTOMER LOGIN
+      */
       const response =
         await fetch(
           `${API_URL}/customer-portal/login`,
@@ -145,21 +181,40 @@ export default function LoginPage() {
             },
 
             body: JSON.stringify({
-              email,
+              email:
+                email.trim(),
               password,
             }),
           }
         );
 
 
-      const data =
-        await response.json();
+      let data: any = null;
+
+      try {
+        data =
+          await response.json();
+      } catch {
+        throw new Error(
+          "The server returned an invalid response."
+        );
+      }
 
 
       if (!response.ok) {
         throw new Error(
-          data.detail ||
+          data?.detail ||
             "Invalid customer login."
+        );
+      }
+
+
+      if (
+        !data?.token ||
+        !data?.customer
+      ) {
+        throw new Error(
+          "Customer session was not created."
         );
       }
 
@@ -184,18 +239,28 @@ export default function LoginPage() {
         )
       );
 
-      router.push(
+
+      /*
+        Full navigation also makes the
+        customer shell start with the
+        completed session already stored.
+      */
+      window.location.replace(
         "/customer"
       );
 
     } catch (error) {
+      console.error(
+        "SolarFlow login error:",
+        error
+      );
+
       setError(
         error instanceof Error
           ? error.message
           : "Login failed."
       );
 
-    } finally {
       setLoading(false);
     }
   }
@@ -494,6 +559,7 @@ export default function LoginPage() {
                         .value
                     )
                   }
+                  autoComplete="email"
                   className="h-12 w-full rounded-xl border border-gray-200 pl-10 pr-4 outline-none transition focus:border-gray-500"
                 />
               </div>
@@ -524,6 +590,7 @@ export default function LoginPage() {
                         .value
                     )
                   }
+                  autoComplete="current-password"
                   className="h-12 w-full rounded-xl border border-gray-200 pl-10 pr-4 outline-none transition focus:border-gray-500"
                 />
               </div>
@@ -538,6 +605,7 @@ export default function LoginPage() {
 
 
             <button
+              type="submit"
               disabled={
                 loading
               }

@@ -15,7 +15,7 @@ import {
 
 
 const API_URL =
-  "https://solarflow-backend-uvgv.onrender.com";
+  "/api/backend";
 
 
 export default function CustomerInstallationsPage() {

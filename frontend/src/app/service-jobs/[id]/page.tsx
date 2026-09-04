@@ -18,7 +18,7 @@ import {
   Wrench,
 } from "lucide-react";
 
-const API_URL = "https://solarflow-backend-uvgv.onrender.com";
+const API_URL = "/api/backend";
 
 const statuses = [
   "Request Received",

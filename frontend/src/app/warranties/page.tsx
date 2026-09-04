@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_URL = "https://solarflow-backend-uvgv.onrender.com";
+const API_URL = "/api/backend";
 
 type Customer = {
   id: number;

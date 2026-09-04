@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_URL = "https://solarflow-backend-production.up.railway.app";
+const API_URL = "https://solarflow-backend-uvqv.onrender.com";
 
 type Customer = {
   id: number;

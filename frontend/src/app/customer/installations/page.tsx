@@ -15,7 +15,7 @@ import {
 
 
 const API_URL =
-  "https://solarflow-backend-production.up.railway.app";
+  "https://solarflow-backend-uvqv.onrender.com";
 
 
 export default function CustomerInstallationsPage() {

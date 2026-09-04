@@ -59,7 +59,7 @@ type ServiceJob = {
   updates: JobUpdate[];
 };
 
-const API_URL = "https://solarflow-backend-production.up.railway.app";
+const API_URL = "https://solarflow-backend-uvqv.onrender.com";
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
